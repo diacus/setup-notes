@@ -1,0 +1,29 @@
+#+title: Gnome Settings
+* Packages to install
+- [ ] dconf-editor
+- [ ] vim
+- [ ] emacs
+- [ ] build-essential
+- [ ] cmake
+- [ ] libtool
+
+* Terminal
+I like to display the tab bar at the bottom of the window
+
+#+begin_src shell
+gsettings set org.gnome.Terminal.Legacy.Settings tab-position bottom
+#+end_src
+
+Apply the [[https://github.com/nordtheme/gnome-terminal][nord theme]] to the =gnome-terminal=
+
+#+begin_src shell :dir ~/src
+git clone https://github.com/nordtheme/gnome-terminal.git
+#+end_src
+
+After cloning the repository, run the =nord.sh= installer script.
+
+#+begin_src shell :dir ~/src/nord-gnome-germinal/src
+./nord.sh
+#+end_src
+
+This script will create a new =Nord= profile.
