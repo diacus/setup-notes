@@ -6,6 +6,21 @@
 - [ ] build-essential
 - [ ] cmake
 - [ ] libtool
+* Nordic GTK Themes
+Download the packages from [[https://www.gnome-look.org/p/1267246/][gnome-look.org]], if you need more details look at the
+project's [[https://github.com/EliverLara/Nordic][Github repository]].
+
+#+begin_src shell
+gsettings set org.gnome.desktop.interface gtk-theme "Nordic-darker-v40"
+gsettings set org.gnome.desktop.wm.preferences theme "Nordic-darker-v40"
+#+end_src
+
+However, after doing this, some aplications like the file explorer might not
+apply the new theme, this is caused aparently by lack of configuration for
+GTK-4.
+
+This can be solved (partially) by adding the style sheets inside [[file:gtk-4/][gtk-4]] folder
+inside =$HOME/.config/= directory.
 
 * Terminal
 I like to display the tab bar at the bottom of the window
