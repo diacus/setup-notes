@@ -6,6 +6,26 @@
 - [ ] build-essential
 - [ ] cmake
 - [ ] libtool
+* Keyboard Layout
+Input source settings can be mamaged using =gsettings= tool. use the =get=
+subcommand to query the keyboard layouts set in your session.
+#+name: get-keyboard-input-sources
+#+begin_src shell :results drawer
+gsettings get org.gnome.desktop.input-sources sources
+#+end_src
+
+For a complete list of available keyboard layouts, query the =man 7
+xkeyboard-config= page.
+
+#+name: set-keyboard-input-sources
+#+begin_src shell
+gsettings \
+    set org.gnome.desktop.input-sources \
+    sources "[('xkb', 'us+alt-intl'), ('xkb', 'us'), ('xkb', 'latam')]"
+#+end_src
+
+See the [[https://wiki.debian.org/Keyboard#How_to_dynamically_manage_input_source_settings_from_the_command_line_.28modern_strategy.29][Debian Wiki]] for more details.
+
 * Nordic GTK Themes
 Download the packages from [[https://www.gnome-look.org/p/1267246/][gnome-look.org]], if you need more details look at the
 project's [[https://github.com/EliverLara/Nordic][Github repository]].
