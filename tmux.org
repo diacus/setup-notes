@@ -1,0 +1,37 @@
+#+title: Tmux Settings
+
+Before configurating [[https://github.com/tmux/tmux/wiki][tmux]], make sure you have available the following packages
+in your system:
+
+- Tmux (>= v1.9)
+- Git
+- Github CLI
+
+* Tmux Configuration
+I have a public gist with the contents of =$HOME/.tmux.conf= file to install it
+just run the code block below.
+
+#+name: tmux-conf
+: https://gist.github.com/diacus/60cdda7c425f864acfee309973abdda7
+
+#+name: install-tmux-conf
+#+begin_src shell :dir /tmp :var TMUX_CONF_GIST=tmux-conf
+gh gist clone $TMUX_CONF_GIST tmux.d
+mv tmux.d/.tmux.conf $HOME/
+rm -rf tmux.d
+#+end_src
+
+Before to start tmux for the very first time, proceed to install the plugin
+manager.
+
+* Tmux Plugin Manager
+Installing the plugin manager requires running v1.9 or higher. For details see
+the repository on [[https://github.com/tmux-plugins/tpm][Github]].
+
+#+name: install-tpm
+#+begin_src shell
+git clone https://github.com/tmux-plugins/tpm $HOME/.tmux/plugins/tpm
+#+end_src
+
+After entering tmux for the very first time, you will need to hit =C-c= + =I=
+right away to tell TPM to install the missing plugins.
