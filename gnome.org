@@ -1,11 +1,4 @@
 #+title: Gnome Settings
-* Packages to install
-- [ ] dconf-editor
-- [ ] vim
-- [ ] emacs
-- [ ] build-essential
-- [ ] cmake
-- [ ] libtool
 * Keyboard Layout
 Input source settings can be mamaged using =gsettings= tool. use the =get=
 subcommand to query the keyboard layouts set in your session.
@@ -46,16 +39,18 @@ inside =$HOME/.config/= directory.
 - [[https://www.gnome-look.org/p/1533591/][Breeze]]
 
 * Terminal
+** Tab Bar Position
 I like to display the tab bar at the bottom of the window
 
 #+begin_src shell
 gsettings set org.gnome.Terminal.Legacy.Settings tab-position bottom
 #+end_src
 
+** Theme
 Apply the [[https://github.com/nordtheme/gnome-terminal][nord theme]] to the =gnome-terminal=
 
 #+begin_src shell :dir ~/src
-git clone https://github.com/nordtheme/gnome-terminal.git
+git clone https://github.com/nordtheme/gnome-terminal.git nord-gnome-terminal
 #+end_src
 
 After cloning the repository, run the =nord.sh= installer script.
@@ -64,4 +59,33 @@ After cloning the repository, run the =nord.sh= installer script.
 ./nord.sh
 #+end_src
 
-This script will create a new =Nord= profile.
+This script will create a new =Nord= profile that you can set as your default.
+
+** Font
+If you don't like any of the available fonts, consider to install a [[file:nerdfonts.org::*How to install Nerd Fonts][Nerd Font]].
+
+*** The GUI way
+1. Click on the _hamburger_ menu of =gnome-terminal=
+2. Click =Preferences= to open the "Preferences" dialog
+3. From the side bar under the =Profiles= section select your profile (i.e. Nord)
+4. Choose the =Text= tab
+5. Check the =Text Appearance/Custom font= field, the "Choos A Terminal Font" will open
+6. Pick the desired font, by scrolling or typing its name
+7. When you find your font, click the =Select= button
+8. Close the "Preferences" dialog
+
+*** The programatic way
+I took this idea from a [[https://ncona.com/2019/11/configuring-gnome-terminal-programmatically/][blog entry]]. I as it is show here doesn't work, but I
+still interested in doing it this way. I will keep trying to make it work.
+
+#+name: terminal-profile
+#+begin_src shell
+gsettings get org.gnome.Terminal.ProfilesList default | awk -F \' '{print $2}'
+#+end_src
+
+#+begin_src shell :var GNOME_TERMINAL_PROFILE=terminal-profile() :results raw
+GSETTINGS_PATH=org.gnome.Terminal.Legacy.Profile:/org/terminal/legacy/profiles
+
+gsettings set $GSETTINGS_PATH:/:$GNOME_TERMINAL_PROFILE/ use-system-font false
+gsettings set $GSETTINGS_PATH:/:$GNOME_TERMINAL_PROFILE/ font 'Hasklug Nerd Font 12'
+#+end_src
