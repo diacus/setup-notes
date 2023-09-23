@@ -1,0 +1,10 @@
+#+title: Desktop Environment Setup Notes
+
+* Desktop Environment Setup Notes
+I wrote this notes in an effort of not repeating my self every time I set up a
+new desktop environment, so the steps I usually follow to achive the look and
+feel I like are listed here
+
+This personal notes are taken in [[https://orgmode.org][orgmode files]], with the intention of execute
+the programatic instructions within [[https://www.gnu.org/software/emacs/][Emacs]]. So the listing code blocs included
+can be executed by simply typing =C-c= + =C-c= with the cursor over it.
