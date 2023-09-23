@@ -1,0 +1,27 @@
+#+title: Nerd Fonts
+
+I conic font aggregator, collection, and patcher. See the [[https://www.nerdfonts.com][official site]] for details
+
+* How to install Nerd Fonts
+Depending on your needs or choices go to [[https://www.programmingfonts.org/][programming fonts]], to have an idea of
+what to expect from each available font.
+
+For now I choose =Hasklug Nerd Font=, so I downloaded it under my [[file:~/.local/share/fonts][users's fonts directory]].
+
+#+name: install-hasklug-nerd-font
+#+begin_src shell :dir ~/.local/share/fonts
+mkdir Hasklug
+cd Hasklug
+
+wget -q -O Hasklug.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/Hasklig.zip
+unzip Hasklug.zip
+rm Hasklug.zip
+#+end_src
+
+In case you want to get rid of the font you installed, you just need to delete
+the folder that contains it
+
+#+name: uninstall-hasklug-nerd-font
+#+begin_src shell :dir ~/.local/share/fonts
+rm -rf Hasklug
+#+end_src
