@@ -1,6 +1,5 @@
 #+title: Desktop Environment Setup Notes
 
-* Desktop Environment Setup Notes
 I wrote this notes in an effort of not repeating my self every time I set up a
 new desktop environment, so the steps I usually follow to achive the look and
 feel I like are listed here
