@@ -7,3 +7,8 @@ feel I like are listed here
 This personal notes are taken in [[https://orgmode.org][orgmode files]], with the intention of execute
 the programatic instructions within [[https://www.gnu.org/software/emacs/][Emacs]]. So the listing code blocs included
 can be executed by simply typing =C-c= + =C-c= with the cursor over it.
+
+* Sections
+- [[file:gnome.org][Gnome Settings]]
+- [[file:nerdfonts.org][Nerd Fonts]]
+- [[file:tmux.org][Tmux]]
