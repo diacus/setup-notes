@@ -1,0 +1,17 @@
+#+title: Alacritty Settings
+* Load settings
+I have a template of [[https://gist.github.com/diacus/a0dee144743d69f49f8e540a25549740][alacritty.yml]] at Github Gist, just download it into your config directory.
+
+
+#+name: alacritty-yaml
+: https://gist.github.com/diacus/a0dee144743d69f49f8e540a25549740
+
+#+begin_src shell :dir /tmp :var ALACRITTY_CONF_GIST=alacritty-yaml
+gh gist clone $ALACRITTY_CONF_GIST alacritty.d
+mkdir -p $HOME/.config/alacritty
+mv alacritty.d/alacritty.yml $HOME/.config/alacritty/
+rm -rf alacritty.d
+#+end_src
+
+* Install themes
+Follow the instructions at [[https://github.com/alacritty/alacritty-theme][alacritty-theme]] repository.
