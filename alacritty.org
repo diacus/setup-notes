@@ -1,5 +1,5 @@
 #+title: Alacritty Settings
-* Load settings
+* Load Settings
 I have a template of [[https://gist.github.com/diacus/a0dee144743d69f49f8e540a25549740][alacritty.yml]] at Github Gist, just download it into your config directory.
 
 
@@ -13,5 +13,13 @@ mv alacritty.d/alacritty.yml $HOME/.config/alacritty/
 rm -rf alacritty.d
 #+end_src
 
-* Install themes
+* Install Themes
 Follow the instructions at [[https://github.com/alacritty/alacritty-theme][alacritty-theme]] repository.
+
+* SSH Term Info
+Within an alacritty terminal run the follwing command.
+#+begin_example
+infocmp | ssh "$USER@$remote_host" 'tic -x /dev/stdin'
+#+end_example
+
+See the [[https://wiki.archlinux.org/title/Alacritty#Terminal_functionality_unavailable_in_remote_shells][Arch Linux wiki]] for details and context.
