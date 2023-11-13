@@ -2,7 +2,6 @@
 * Load Settings
 I have a template of [[https://gist.github.com/diacus/a0dee144743d69f49f8e540a25549740][alacritty.yml]] at Github Gist, just download it into your config directory.
 
-
 #+name: alacritty-yaml
 : https://gist.github.com/diacus/a0dee144743d69f49f8e540a25549740
 
@@ -15,6 +14,11 @@ rm -rf alacritty.d
 
 * Install Themes
 Follow the instructions at [[https://github.com/alacritty/alacritty-theme][alacritty-theme]] repository.
+
+#+begin_src shell
+mkdir -p $HOME/.config/alacritty/themes
+gh repo clone alacritty/alacritty-theme $HOME/.config/alacritty/themes
+#+end_src
 
 * SSH Term Info
 Within an alacritty terminal run the follwing command.
