@@ -1,0 +1,23 @@
+#+title: Keyboard
+
+* Disable Keyboard
+
+To display the keyboards (and other input devices) detected by your system, use the =xinput= command:
+
+#+begin_src shell :results wrap raw
+xinput list
+#+end_src
+
+
+For this example, I want do disable my laptop's keyboard, which is labeled as
+"AT Translated Set 2 Keyboard" according to this [[https://askubuntu.com/questions/160945/is-there-a-way-to-disable-a-laptops-internal-keyboard][Ask Ubuntu post]].
+
+Folloing the instructions there. I can disable the keyboard by using the =float= subcommand
+
+#+begin_src shell :var KEYBOARD_ID="14"
+xinput float $KEYBOARD_ID
+#+end_src
+
+#+begin_src shell :var KEYBOARD_ID="14" :var MASTER="3"
+xinput reattach $KEYBOARD_ID $MASTER
+#+end_src

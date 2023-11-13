@@ -12,3 +12,4 @@ can be executed by simply typing =C-c= + =C-c= with the cursor over it.
 - [[file:gnome.org][Gnome Settings]]
 - [[file:nerdfonts.org][Nerd Fonts]]
 - [[file:tmux.org][Tmux]]
+- [[file:keyboard.org][Keyboard]]
