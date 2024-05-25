@@ -1,0 +1,9 @@
+#+title: Displaylink
+
+DisplayLink is a technology that makes simple connect and display to any
+computer supporting USB or Wi-Fi by providing universal plug and play docking
+stations.
+
+Unfortunately the official [[https://www.synaptics.com/products/displaylink-graphics][DisplayLink Graphics by Synaptics]] only offers support
+for Ubuntu, however the [[https://github.com/AdnanHodzic/displaylink-debian/][displaylink-debian]] project provides an installer to
+enchance the experience for other Debian based distributions.

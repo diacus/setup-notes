@@ -1,0 +1,20 @@
+#+title: Dropbox Installation
+
+* Debian
+
+Following the instructions from [[https://help.dropbox.com/installs/linux-commands][Dropbox help center]]:
+
+#+begin_src shell :dir /tmp :results silent
+DROPBOX_REPO=https://linux.dropboxstatic.com/packages/debian
+wget -q $DROPBOX_REPO/dropbox_2023.09.06_amd64.deb \
+    -O dropbox_2023.09.06_amd64.deb
+
+wget -q $DROPBOX_REPO/nautilus-dropbox_2023.09.06_all.deb \
+    -O nautilus-dropbox_2023.09.06_all.deb
+#+end_src
+
+#+name: run-as-root
+#+begin_src shell :dir /sudo::/tmp :results output
+apt install -y /tmp/dropbox_2023.09.06_amd64.deb
+apt install -y /tmp/nautilus-dropbox_2023.09.06_all.deb
+#+end_src

@@ -9,8 +9,10 @@ the programatic instructions within [[https://www.gnu.org/software/emacs/][Emacs
 can be executed by simply typing =C-c= + =C-c= with the cursor over it.
 
 * Sections
+- [[file:alacritty.org][Alacritty]]
+- [[file:displaylink.org][DisplayLink]]
+- [[file:dropbox.org][Dropbox]]
 - [[file:gnome.org][Gnome Settings]]
+- [[file:keyboard.org][Keyboard]]
 - [[file:nerdfonts.org][Nerd Fonts]]
 - [[file:tmux.org][Tmux]]
-- [[file:keyboard.org][Keyboard]]
-- [[file:alacritty.org][Alacritty]]
