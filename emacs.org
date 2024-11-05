@@ -1,0 +1,41 @@
+#+TITLE: Emacs settings
+#+AUTHOR: Diacus Magnuz
+* Emacs server and client on MacOS
+#+begin_quote
+*TL;DR* Install the [[spawn-emacs-client][this script]] by hiting =C-c= + =C-v= + =t= (see the
+[[https://orgmode.org/manual/Extracting-Source-Code.html][details]]). Running it manages the Emacs server and its clients for you.
+#+end_quote
+
+The differences for MacOS start from the location of the binaries,
+under the =/Applications/Emacs.app= folder in this case.
+
+Once Emacs is installed in your system, if you want to use Emacs
+server and client, you need to look for the socket file. If it exists
+it means Emacs server is running, and you only need to spawn a new
+client attached to it, if it does not, you can start a new Emacs
+server instance along with its frame.
+
+To check if Emacs server is running, grep /server/ over the list of
+files opened by Emacs, process the resulting line to find out the
+socket file name and use it to spawn a new Emacs client that connects
+to it.
+
+The [[spawn-emacs-client][following]] script checks all that, so store it into your file
+system and use it to start Emacs.
+
+#+name: spawn-emacs-client
+#+begin_src shell :tangle ~/bin/spawn-emacs-client.sh :mkdirp yes
+  #!/bin/bash
+
+  socket_file=$(lsof -c Emacs | grep server | tr -s " " | cut -d ' ' -f8)
+  emacs_home=/Applications/Emacs.app/Contents/MacOS
+  emacs=$emacs_home/Emacs
+  client=$emacs_home/bin/emacsclient
+
+  if [[ $socket_file == "" ]]; then
+      echo "Starting Emacs Server..."
+      $emacs --chdir $PWD --execute "(server-start)" $@ &
+  else
+      $client -c -n $@ --socket-name=$socket_file &
+  fi
+#+end_src
