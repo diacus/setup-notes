@@ -1,0 +1,6 @@
+#+TITLE: Emacs Dependencies
+* C/C++ IDE
+In order to configure the [[https://emacs-lsp.github.io/lsp-mode/tutorials/CPP-guide/][LSP support]] in Emacs there are some
+dependencies to install.
+
+For Debian based systems use [[https://apt.llvm.org/][LLVM]].

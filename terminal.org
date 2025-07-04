@@ -1,0 +1,41 @@
+#+TITLE: Terminal and CLI Tools Settings
+
+* FZF
+Install the shell integration with =fzf= from Github repository
+#+begin_src emacs-lisp
+      (defun fzf-shell-scripts-download (target-dir)
+	"Downloads the `fzf` shell integration scripts into TARGET-DIR and
+  assign them execution permissions. TARGET-DIR must be a string
+  representing an existing directory."
+	(let* ((shell-type (file-name-nondirectory (or (getenv "SHELL") "sh")))
+	       (fzf-version (string-trim
+			     (shell-command-to-string "fzf --version | cut -d' ' -f 1")))
+	       (completion-module (format "completion.%s" shell-type))
+	       (key-bindings-module (format "key-bindings.%s" shell-type))
+	       (url-template "https://raw.githubusercontent.com/junegunn/fzf/refs/tags/%s/shell/%s")
+	       (completion-url (format url-template fzf-version completion-module))
+	       (bindings-url (format url-template fzf-version key-bindings-module))
+	       ;; Prefijar los nombres con "fzf-"
+	       (completion-filename (format "fzf-%s" completion-module))
+	       (bindings-filename (format "fzf-%s" key-bindings-module))
+	       (completion-dest (expand-file-name completion-filename target-dir))
+	       (bindings-dest (expand-file-name bindings-filename target-dir)))
+	  (if (not (file-directory-p target-dir))
+	      (error "The target directory does not exist: %s" target-dir)
+	    (condition-case err
+		(progn
+		  ;; Descargar archivos
+		  (url-copy-file completion-url completion-dest t)
+		  (url-copy-file bindings-url bindings-dest t)
+		  ;; Asignar permisos de ejecución
+		  (set-file-modes completion-dest #o755)
+		  (set-file-modes bindings-dest #o755)
+		  (message "Files downloaded and permissions granted: %s" target-dir)
+		  (list completion-dest bindings-dest)
+		  (directory-files target-dir t)) ; <- valor de retorno útil
+	      (error
+	       (message "Error while download or configure files: %s"
+			(error-message-string err)))))))
+
+      (fzf-shell-scripts-download "~/.zsh.d")
+#+end_src
