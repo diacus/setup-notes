@@ -1,0 +1,22 @@
+#+TITLE: GNU Emacs settings
+* Emacs as daemon in Linux
+The service file is stored in [[https://gist.github.com/diacus/359ed1bbaffee1678aad161acf41b39a][Github Gist]] platform. To install it just
+run the block below.
+#+begin_src emacs-lisp
+  (require 'url)
+
+  (let* ((gist-raw-url
+          "https://gist.githubusercontent.com/diacus/359ed1bbaffee1678aad161acf41b39a/raw/emacs.service")
+         (dest-file (expand-file-name "~/.config/systemd/user/emacs.service"))
+         (dest-dir  (file-name-directory dest-file)))
+    (unless (file-directory-p dest-dir)
+      (make-directory dest-dir t))
+    (url-copy-file gist-raw-url dest-file t)
+    (message "Systemd emacs service installed in %s directory." dest-file))
+#+end_src
+
+After that reload the systemd daemon
+#+begin_src shell
+  systemctl --user daemon-reload
+  systemctl --user enable emacs.service
+#+end_src

@@ -18,3 +18,4 @@ can be executed by simply typing =C-c= + =C-c= with the cursor over it.
 - [[file:tmux.org][Tmux]]
 - [[file:terminal.org][Terminal]]
 - [[file:emacs-dependencies.org][Emacs Dependencies]]
+- [[file:emacs.org][Emacs]]
