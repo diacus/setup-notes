@@ -23,15 +23,15 @@ rm Hasklug.zip
 #+begin_src emacs-lisp
   (require 'url)
 
-  (let* ((font-raw-url
-          "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/Hasklig.zip")
-         (dest-dir "~/.local/share/fonts")
-         (dest-file (concat dest-dir "/Hasklug.zip")))
-    (unless (file-directory-p dest-dir)
-      (make-directory dest-dir t))
-    (url-copy-file font-raw-url dest-file t)
+  (let* ((font-raw-url "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/Hasklig.zip")
+         (fonts-dir    (file-name-concat (getenv "HOME") ".local/share/fonts"))
+         (font-archive (file-name-concat fonts-dir "Hasklug.zip"))
+         (font-target  (file-name-concat fonts-dir "Hasklug")))
+    (unless (file-directory-p fonts-dir)
+      (make-directory fonts-dir t))
+    (url-copy-file font-raw-url font-archive t)
     (start-process "unzip-process" "*unzip-output*"
-                   "unzip" dest-file "-d" (concat dest-dir "/Hasklug")))
+                   "unzip" font-archive "-d" font-target))
 #+end_src
 
 In case you want to get rid of the font you installed, you just need
@@ -39,5 +39,6 @@ to delete the folder that contains it
 
 #+name: uninstall-hasklug-nerd-font
 #+begin_src shell :dir ~/.local/share/fonts
-rm -rf Hasklug
+  rm -rf Hasklug Hasklug.zip
 #+end_src
+
