@@ -20,3 +20,27 @@ After that reload the systemd daemon
   systemctl --user daemon-reload
   systemctl --user enable emacs.service
 #+end_src
+
+* Wayland Emacs daemon
+The machine runs the native Wayland build (=emacs-pgtk=) on the HiDPI panel;
+installing it removes the =emacs-gtk= binary, and both the gist unit above and
+the distro unit (=/usr/lib/systemd/user/emacs.service=) hardcode =emacs-gtk=,
+so the daemon fails to start with =status=203/EXEC= after the switch.
+
+Fix: a user drop-in that points the daemon at the Wayland build. It survives
+package updates, unlike editing the distro file.
+#+begin_src conf
+  # ~/.config/systemd/user/emacs.service.d/override.conf
+  [Service]
+  ExecStart=
+  ExecStart=/usr/bin/emacs-pgtk --fg-daemon
+#+end_src
+
+#+begin_src shell
+  systemctl --user daemon-reload
+  systemctl --user enable emacs.service
+  systemctl --user restart emacs.service
+#+end_src
+
+Note: if the gist unit is reinstalled later, =update-alternatives= decides
+which build =emacs= resolves to (on this machine: =emacs-pgtk=).
