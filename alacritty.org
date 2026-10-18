@@ -1,27 +1,52 @@
 #+title: Alacritty Settings
 * Load Settings
-I have a template of [[https://gist.github.com/diacus/a0dee144743d69f49f8e540a25549740][alacritty.yml]] at Github Gist, just download it into your config directory.
+Since version 0.15 Alacritty reads its configuration from TOML instead of
+YAML; loading an =alacritty.yml= file produces a deprecation warning. I have
+a template of [[https://gist.github.com/diacus/a0dee144743d69f49f8e540a25549740][alacritty.yml]] at Github Gist still in the legacy YAML format:
+download it and migrate it with the built-in =alacritty migrate= command
+(see its [[https://github.com/alacritty/alacritty/blob/master/docs/faq.md#how-do-i-migrate-my-config-from-yaml-to-toml][FAQ]]). The gist import line still points to =nord.yaml=, which was
+renamed to =nord.toml= in the [[https://github.com/alacritty/alacritty-theme][alacritty-theme]] repository, so fix that in the
+migrated file as well.
 
 #+name: alacritty-yaml
-: https://gist.github.com/diacus/a0dee144743d69f49f8e540a25549740
+: https://gist.githubusercontent.com/diacus/a0dee144743d69f49f8e540a25549740/raw/96d0d132604566610e3241d89d0977c30de9dbee/alacritty.yml
 
-#+begin_src shell :dir /tmp :var ALACRITTY_CONF_GIST=alacritty-yaml
-gh gist clone $ALACRITTY_CONF_GIST alacritty.d
-mkdir -p $HOME/.config/alacritty
-mv alacritty.d/alacritty.yml $HOME/.config/alacritty/
-rm -rf alacritty.d
+#+begin_src emacs-lisp :results none :var alacritty-yaml-url=alacritty-yaml
+  (require 'url)
+
+  (let* ((config-dir (file-name-concat (getenv "HOME") ".config" "alacritty"))
+         (yaml-file  (file-name-concat config-dir "alacritty.yml"))
+         (toml-file  (file-name-concat config-dir "alacritty.toml")))
+    (unless (file-directory-p config-dir)
+      (make-directory config-dir t))
+    (url-copy-file alacritty-yaml-url yaml-file t)
+    (unless (zerop (call-process "alacritty" nil nil nil
+                                 "migrate" "-i" "-s" "-c" yaml-file))
+      (error "alacritty migrate failed for %s" yaml-file))
+    (with-current-buffer (find-file-noselect toml-file)
+      (goto-char (point-min))
+      (while (search-forward "nord.yaml" nil t)
+        (replace-match "nord.toml"))
+      (save-buffer)
+      (kill-buffer))
+    (delete-file yaml-file))
 #+end_src
 
 * Install Themes
-Follow the instructions at [[https://github.com/alacritty/alacritty-theme][alacritty-theme]] repository.
+Themes are distributed as TOML files; follow the instructions at the
+[[https://github.com/alacritty/alacritty-theme][alacritty-theme]] repository.
 
-#+begin_src shell
-mkdir -p $HOME/.config/alacritty/themes
-gh repo clone alacritty/alacritty-theme $HOME/.config/alacritty/themes
+#+name: install-alacritty-themes
+#+begin_src emacs-lisp :results none
+  (require 'magit)
+
+  (let ((themes-url "https://github.com/alacritty/alacritty-theme")
+        (themes-dir (file-name-concat (getenv "HOME") ".config" "alacritty" "themes")))
+    (magit-clone-regular themes-url themes-dir nil))
 #+end_src
 
 * SSH Term Info
-Within an alacritty terminal run the follwing command.
+Within an alacritty terminal run the following command.
 #+begin_example
 infocmp | ssh "$USER@$remote_host" 'tic -x /dev/stdin'
 #+end_example
