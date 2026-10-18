@@ -10,6 +10,7 @@ can be executed by simply typing =C-c= + =C-c= with the cursor over it.
 
 * Sections
 - [[file:alacritty.org][Alacritty]]
+- [[file:kitty.org][Kitty]]
 - [[file:displaylink.org][DisplayLink]]
 - [[file:dropbox.org][Dropbox]]
 - [[file:gnome.org][Gnome Settings]]

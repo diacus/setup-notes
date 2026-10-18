@@ -1,0 +1,28 @@
+#+title: Kitty Settings
+
+* Apply the Nord Theme
+Since version 0.23 kitty is distributed with the [[https://sw.kovidgoyal.net/kitty/kittens/themes/][themes kitten]], which downloads
+the theme collection from the [[https://github.com/kovidgoyal/kitty-themes][kitty-themes]] repository. Passing a theme name
+applies it non-interactively; the kitten writes the theme to
+=current-theme.conf= inside =$HOME/.config/kitty= and appends an
+=include current-theme.conf= line to =kitty.conf=, so a later run with another
+theme name just replaces that file. With =--reload-in=all= every running kitty
+instance reloads its configuration right away.
+
+#+name: apply-kitty-nord-theme
+#+begin_src emacs-lisp :results none
+  (let* ((config-dir (file-name-concat (getenv "HOME") ".config" "kitty"))
+         (theme-file (file-name-concat config-dir "current-theme.conf")))
+    (unless (file-directory-p config-dir)
+      (make-directory config-dir t))
+    (unless (zerop (call-process "kitten" nil nil nil
+                                 "themes" "--reload-in=all" "Nord"))
+      (error "kitten themes failed to apply the Nord theme"))
+    (unless (file-exists-p theme-file)
+      (error "the kitten ran but %s was not created" theme-file)))
+#+end_src
+
+To browse and preview themes interactively instead of applying one by name:
+#+begin_example
+kitty +kitten themes
+#+end_example
