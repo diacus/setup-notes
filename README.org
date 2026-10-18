@@ -18,3 +18,42 @@ can be executed by simply typing =C-c= + =C-c= with the cursor over it.
 - [[file:tmux.org][Tmux]]
 - [[file:terminal.org][Terminal]]
 - [[file:emacs.org][Emacs]]
+
+* Github Gist Usage
+Some punctual configuration files (e.g. =emacs.service=, =.tmux.conf=, the
+legacy =alacritty.yml=) are not worth a repository of their own and are kept
+at [[https://gist.github.com/diacus][Github Gist]] instead.
+
+** How versioning works
+Every edit of a gist is a commit in its underlying git repository; the
+Revisions tab of a gist shows this history. There is no tag or branch
+mechanism that gist URLs can resolve: a revision is addressed by its commit
+hash alone. The raw content URLs look like this:
+
+- Pinned revision (commit hash embedded):
+  =https://gist.githubusercontent.com/<user>/<gist id>/<hash>/<filename>=
+- Latest revision (no hash):
+  =https://gist.githubusercontent.com/<user>/<gist id>/raw/<filename>=
+
+The plain gist page URL (no hash) always shows the current revision. To
+update a pinned reference, copy the hash of the new revision from the
+Revisions tab (or from the raw URL of the file viewed at that revision).
+
+The underlying git repository (see the Embed or Clone dropdown) can be
+cloned and locally tagged, but those tags are not resolvable by any gist
+URL, so they are not useful for pinning here.
+
+** How are they used it in this repository
+Download blocks in the notes reference gists through =url-copy-file=
+(never shell =wget=); the choice between the two raw URL forms depends on
+the stability the step needs:
+
+- *Pinned revision*: used when a step depends on the content of the file as
+  the notes were written against it (e.g. the =alacritty.yml= template in
+  [[file:alacritty.org][Alacritty]] migrated to TOML, the =.tmux.conf= in [[file:tmux.org][Tmux]]). The hash in
+  the URL keeps the block reproducible even if the gist is edited later;
+  bumping it is a deliberate act documented in the notes.
+- *Latest revision*: used when the note does not care about gist edits
+  (e.g. the =emacs.service= unit in [[file:emacs.org][Emacs]]). Prefer the pinned form whenever
+  the content matters; the latest form is acceptable only for files that
+  rarely change or whose drift is harmless.
