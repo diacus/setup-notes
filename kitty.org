@@ -9,20 +9,55 @@ applies it non-interactively; the kitten writes the theme to
 theme name just replaces that file. With =--reload-in=all= every running kitty
 instance reloads its configuration right away.
 
-#+name: apply-kitty-nord-theme
-#+begin_src emacs-lisp :results none
+The block is parameterized with =:var kitty-theme=, defaulting to =Nord=;
+another theme can be applied with a =#+call= line passing a different name.
+
+#+name: apply-kitty-theme
+#+begin_src emacs-lisp :results none :var kitty-theme="Nord"
   (let* ((config-dir (file-name-concat (getenv "HOME") ".config" "kitty"))
          (theme-file (file-name-concat config-dir "current-theme.conf")))
     (unless (file-directory-p config-dir)
       (make-directory config-dir t))
+    (message "Applying the %s kitty theme" kitty-theme)
     (unless (zerop (call-process "kitten" nil nil nil
-                                 "themes" "--reload-in=all" "Nord"))
-      (error "kitten themes failed to apply the Nord theme"))
+                                 "themes" "--reload-in=all" kitty-theme))
+      (error "kitten themes failed to apply the %s theme" kitty-theme))
     (unless (file-exists-p theme-file)
-      (error "the kitten ran but %s was not created" theme-file)))
+      (error "the kitten ran but %s was not created" theme-file))
+    (message "Applied the %s theme to %s" kitty-theme theme-file))
 #+end_src
 
 To browse and preview themes interactively instead of applying one by name:
 #+begin_example
 kitty +kitten themes
 #+end_example
+
+* Uninstallation
+
+The kitty configuration lives entirely in =~/.config/kitty= (including the
+=current-theme.conf= written by the themes kitten above), so removing that
+directory undoes the setup. As with the other notes, no shell =rm= is used:
+the deletion is done in Emacs Lisp, and either outcome is reported to the
+=*Messages*= buffer.
+
+#+name: remove-kitty-config
+#+begin_src emacs-lisp :results none
+  (let ((config-dir (file-name-concat (getenv "HOME") ".config" "kitty")))
+    (if (not (file-directory-p config-dir))
+        (message "Nothing to remove, %s does not exist" config-dir)
+      (delete-directory config-dir 'recursive)
+      (message "Removed %s" config-dir)))
+#+end_src
+
+Note the theme block above also fits here: the themes collection ships a
+theme named =Default=, which re-applies the colors kitty is built with.
+Since the block creates the configuration directory when it is missing,
+and the kitten writes out a pristine, fully commented =kitty.conf= with
+the =BEGIN_KITTY_THEME= / =END_KITTY_THEME= block when there is none,
+running the call below right after the uninstall leaves behind a fresh
+=~/.config/kitty= with the default colors:
+
+#+call: apply-kitty-theme(kitty-theme="Default") :results none
+
+Afterwards the =Nord= theme can be re-applied at any time with =C-c C-c=
+over the =apply-kitty-theme= block itself.
