@@ -52,3 +52,48 @@ infocmp | ssh "$USER@$remote_host" 'tic -x /dev/stdin'
 #+end_example
 
 See the [[https://wiki.archlinux.org/title/Alacritty#Terminal_functionality_unavailable_in_remote_shells][Arch Linux wiki]] for details and context.
+
+* Uninstallation
+
+The configuration lives entirely in =~/.config/alacritty=: the migrated
+=alacritty.toml= and the cloned =themes= directory, so removing that
+directory undoes the setup. As elsewhere in these notes, no shell =rm= is
+used: the deletion is done in Emacs Lisp, reporting either outcome to the
+=*Messages*= buffer.
+
+#+name: remove-alacritty-config
+#+begin_src emacs-lisp :results none
+  (let ((config-dir (file-name-concat (getenv "HOME") ".config" "alacritty")))
+    (if (not (file-directory-p config-dir))
+        (message "Nothing to remove, %s does not exist" config-dir)
+      (delete-directory config-dir 'recursive)
+      (message "Removed %s" config-dir)))
+#+end_src
+
+* Applying the default theme
+
+Unlike kitty, whose themes kitten ships a theme named =Default=, Alacritty's
+built-in colors apply as soon as the configuration imports no theme. The
+migrated =alacritty.toml= ends in the single-line =import= key under
+=[general]=; deleting that line with =replace-match=, in place of a shell
+=sed=, and letting the following =alacritty= instance reload is enough.
+The remaining empty =[general]= table is valid TOML and harmless.
+
+#+name: apply-alacritty-default-theme
+#+begin_src emacs-lisp :results none
+  (let ((toml-file (file-name-concat (getenv "HOME") ".config" "alacritty" "alacritty.toml")))
+    (if (not (file-exists-p toml-file))
+        (message "Nothing to do, %s does not exist" toml-file)
+      (with-current-buffer (find-file-noselect toml-file)
+        (goto-char (point-min))
+        (if (re-search-forward "^[ \t]*import[ \t]*=.*\n?" nil t)
+            (progn
+              (replace-match "")
+              (save-buffer)
+              (message "Removed the theme import from %s" toml-file))
+          (message "No theme import found in %s" toml-file))
+        (kill-buffer))))
+#+end_src
+
+Afterwards, running the =Load Settings= block above re-creates the
+configuration, importing =nord.toml= again.
