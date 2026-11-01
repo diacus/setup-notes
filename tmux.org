@@ -14,7 +14,7 @@ just run the code block below.
 #+name: tmux-gist
 : https://gist.githubusercontent.com/diacus/60cdda7c425f864acfee309973abdda7/raw/c4a7ff95804a35cc98656c50002376d3f6bdd9dc/.tmux.conf
 
-#+begin_src emacs-lisp :var tmux-conf-url=tmux-gist
+#+begin_src emacs-lisp :var tmux-conf-url=tmux-gist :results none
   (let ((tmux-conf-file (expand-file-name ".tmux.conf" (getenv "HOME"))))
     (url-copy-file tmux-conf-url tmux-conf-file)
     (message (format "Tmux configuration installed in %s" tmux-conf-file)))
@@ -28,13 +28,12 @@ Installing the plugin manager requires running v1.9 or higher. For details see
 the repository on [[https://github.com/tmux-plugins/tpm][Github]].
 
 #+name: install-tpm
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results none
   (require 'magit)
 
   (let ((tpm-url "https://github.com/tmux-plugins/tpm")
-        (tpm-dir (expand-file-name ".tmux/plugins/tpm2" (getenv "HOME"))))
+        (tpm-dir (expand-file-name ".tmux/plugins/tpm" (getenv "HOME"))))
     (magit-clone-regular tpm-url tpm-dir nil))
-
 #+end_src
 
 After entering tmux for the very first time, you will need to hit =C-c= + =I=
