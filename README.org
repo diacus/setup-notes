@@ -18,6 +18,7 @@ can be executed by simply typing =C-c= + =C-c= with the cursor over it.
 - [[file:nerdfonts.org][Nerd Fonts]]
 - [[file:tmux.org][Tmux]]
 - [[file:terminal.org][Terminal]]
+- [[file:vim.org][Vim]]
 - [[file:emacs.org][Emacs]]
 
 * Github Gist Usage

@@ -1,0 +1,44 @@
+#+title: Vim Settings
+
+My [[https://github.com/diacus/vim-settings][vim-settings]] repository holds the =$HOME/.vimrc= boilerplate and the
+=vim-plug= plugin manager setup. The =scripts/install.sh= installer inside it
+downloads =vim-plug= into =$HOME/.vim/autoload/= and the boilerplate into
+=$HOME/.vimrc=.
+
+* Installation
+
+The installer is downloaded with =url-copy-file= instead of piping shell
+=curl= through =Bash=, then executed with =Bash= from a scratch directory,
+keeping the downloaded script outside =$HOME=.
+
+#+name: vim-settings-install-script
+: https://raw.githubusercontent.com/diacus/vim-settings/v2026-10-31/scripts/install.sh
+
+#+begin_src emacs-lisp :results none :var vim-installer-url=vim-settings-install-script
+  (require 'url)
+
+  (let* ((scratch-dir    (make-temp-file "vim-settings-" 'dir-flag))
+         (installer-file (expand-file-name "install.sh" scratch-dir)))
+    (url-copy-file vim-installer-url installer-file t)
+    (unless (zerop (shell-command
+                    (format "bash %s" (shell-quote-argument installer-file))))
+      (error "vim-settings install.sh failed, check the *Shell Command Output* buffer")))
+#+end_src
+
+Note that the raw URL is pinned to a tag of the repository, following the
+[[file:README.org][pinned revision]] practice. Unlike gists, whose underlying revision URLs can
+only be addressed by commit hash, a regular repository has tags and
+=raw.githubusercontent.com= resolves them; bumping the pinned tag above is a
+deliberate act whenever a newer release of the installer is in place.
+
+* Post installation
+
+The installer only sets up the plugin manager and the boilerplate; the
+plugins themselves are not installed by it. Open Vim for the first time and
+run the following command:
+
+#+begin_example
+:PlugInstall
+#+end_example
+
+Then restart Vim to apply all the settings.
