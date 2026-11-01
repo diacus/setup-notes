@@ -7,34 +7,81 @@ in your system:
 - [[https://git-scm.com/][Git]]
 - [[https://magit.vc/][Magit]]
 
-* Tmux Configuration
-I have a public gist with the contents of =$HOME/.tmux.conf= file to install it
-just run the code block below.
+* Installation
+
+I have a public gist with the contents of =$HOME/.tmux.conf= file, and the
+plugin manager, [[https://github.com/tmux-plugins/tpm][TPM]], is cloned into =~/.tmux/plugins/tpm= with =magit-clone=. The
+plugins themselves are installed with TPM's command line interface, so no
+interactive tmux session to trigger =prefix= + =I= is needed. A single code
+block does it all, reporting each step in the =*Messages*= buffer:
 
 #+name: tmux-gist
 : https://gist.githubusercontent.com/diacus/60cdda7c425f864acfee309973abdda7/raw/c4a7ff95804a35cc98656c50002376d3f6bdd9dc/.tmux.conf
 
 #+begin_src emacs-lisp :var tmux-conf-url=tmux-gist :results none
-  (let ((tmux-conf-file (expand-file-name ".tmux.conf" (getenv "HOME"))))
-    (url-copy-file tmux-conf-url tmux-conf-file)
-    (message (format "Tmux configuration installed in %s" tmux-conf-file)))
-#+end_src
-
-Before to start tmux for the very first time, proceed to install the plugin
-manager.
-
-* Tmux Plugin Manager
-Installing the plugin manager requires running v1.9 or higher. For details see
-the repository on [[https://github.com/tmux-plugins/tpm][Github]].
-
-#+name: install-tpm
-#+begin_src emacs-lisp :results none
   (require 'magit)
 
-  (let ((tpm-url "https://github.com/tmux-plugins/tpm")
-        (tpm-dir (expand-file-name ".tmux/plugins/tpm" (getenv "HOME"))))
-    (magit-clone-regular tpm-url tpm-dir nil))
+  (let ((tmux-conf-file (expand-file-name ".tmux.conf" (getenv "HOME")))
+        (tpm-url "https://github.com/tmux-plugins/tpm")
+        (tpm-dir (expand-file-name ".tmux/plugins/tpm" (getenv "HOME")))
+        (tpm-install (expand-file-name
+                      ".tmux/plugins/tpm/bin/install_plugins" (getenv "HOME"))))
+    (message "Downloading tmux configuration from gist")
+    (url-copy-file tmux-conf-url tmux-conf-file)
+    (message "Tmux configuration installed in %s" tmux-conf-file)
+
+    (if (file-exists-p tpm-install)
+        (message "TPM already installed in %s" tpm-dir)
+      (message "Cloning TPM from %s" tpm-url)
+      ;; magit-clone-regular runs the git clone asynchronously; instead of
+      ;; trying to track the git process, wait for bin/install_plugins to
+      ;; show up, the last thing git writes at checkout. Note that the
+      ;; function returns the process sentinel, not the process itself, and
+      ;; that it would otherwise ask whether to set remote.pushDefault (the
+      ;; magit-clone-set-remote.pushDefault default is 'ask): both details
+      ;; are sidestepped here, with a let-binding and a file poll that has
+      ;; a time limit. Also, calling the function again on an existing
+      ;; non-empty directory fails with a user-error, hence the guard above.
+      (let ((clone-deadline (time-add (current-time) 300)))
+        (let ((magit-clone-set-remote.pushDefault nil))
+          (magit-clone-regular tpm-url tpm-dir nil))
+        (while (and (not (file-exists-p tpm-install))
+                    (time-less-p (current-time) clone-deadline))
+          (accept-process-output nil 1))
+        (unless (file-exists-p tpm-install)
+          (error "TPM clone failed or timed out, check the *magit-process* buffer"))
+        (message "TPM installed in %s" tpm-dir)))
+
+    ;; Headless plugin installation, driven by the plugin list in
+    ;; ~/.tmux.conf; tmux does not need to be started for this.
+    (message "Installing the tmux plugins with TPM")
+    (unless (zerop (shell-command (shell-quote-argument tpm-install)))
+      (error "TPM install_plugins failed, check the *Shell Command Output* buffer")))
 #+end_src
 
-After entering tmux for the very first time, you will need to hit =C-c= + =I=
-right away to tell TPM to install the missing plugins.
+The plugin installation step can be re-run at any time, either with this
+block or on its own; it skips the plugins that are already installed. For
+the details, see the documentation about [[https://github.com/tmux-plugins/tpm/blob/master/docs/managing_plugins_via_cmd_line.md][managing plugins via the command line]]:
+=bin/install_plugins=, =bin/update_plugins all= and =bin/clean_plugins= are the
+command line counterparts of the usual =prefix= + =I=, =prefix= + =U= and
+=prefix= + =alt+u= key bindings.
+
+* Uninstallation
+
+To remove the settings, the shell equivalent of =rm -rf ~/.tmux*= is
+reproduced with =delete-file= / =delete-directory= over the =$HOME= entries
+whose names start with =.tmux= (that is =~/.tmux.conf= and the =~/.tmux=
+directory, which holds TPM and all the installed plugins). No shell globbing
+is used: the =rm= command line is expanded here in Emacs Lisp, so nothing
+runs outside Emacs.
+
+#+begin_src emacs-lisp :results none
+  (let ((tmux-entries (directory-files "~" 'full "\\`\\.tmux")))
+    (if (null tmux-entries)
+        (message "Nothing to remove, no ~/.tmux* entries found")
+      (dolist (entry tmux-entries)
+        (if (file-directory-p entry)
+            (delete-directory entry 'recursive)
+          (delete-file entry))
+        (message "Removed %s" entry))))
+#+end_src
