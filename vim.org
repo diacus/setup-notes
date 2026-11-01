@@ -18,11 +18,36 @@ keeping the downloaded script outside =$HOME=.
   (require 'url)
 
   (let* ((scratch-dir    (make-temp-file "vim-settings-" 'dir-flag))
-         (installer-file (expand-file-name "install.sh" scratch-dir)))
+         (installer-file (expand-file-name "install.sh" scratch-dir))
+         (vimrc-file     (expand-file-name ".vimrc" "~"))
+         (uncommented    0))
+    (message "Downloading %s" vim-installer-url)
     (url-copy-file vim-installer-url installer-file t)
+
+    (message "Running installer %s" installer-file)
     (unless (zerop (shell-command
                     (format "bash %s" (shell-quote-argument installer-file))))
-      (error "vim-settings install.sh failed, check the *Shell Command Output* buffer")))
+      (error "vim-settings install.sh failed, check the *Shell Command Output* buffer"))
+
+    (message "Uncommenting disabled vim-plug plugins in %s" vimrc-file)
+    ;; The boilerplate ships the plugins commented out as " Plug ..."; turn
+    ;; these comment markers back into Plug directives, in Emacs instead of
+    ;; a shell `sed'.
+    (with-temp-file vimrc-file
+      (insert-file-contents vimrc-file)
+      (while (re-search-forward "^\" Plug" nil 'move)
+        (replace-match "Plug")
+        (setq uncommented (1+ uncommented))))
+    (message "Uncommented %d vim-plug plugin lines" uncommented)
+
+    (message "Installing plugins with vim -es")
+    ;; vim -es does not source ~/.vimrc, so it is passed explicitly with
+    ;; -u; without it, PlugInstall fails with "E492: Not an editor command".
+    (unless (zerop (shell-command
+                    (format "vim -es -u %s -c PlugInstall -c qall"
+                            (shell-quote-argument vimrc-file))))
+      (error "vim -es -c PlugInstall -c qall failed, check the *Shell Command Output* buffer"))
+    (message "vim-settings installed"))
 #+end_src
 
 Note that the raw URL is pinned to a tag of the repository, following the
@@ -33,12 +58,38 @@ deliberate act whenever a newer release of the installer is in place.
 
 * Post installation
 
-The installer only sets up the plugin manager and the boilerplate; the
-plugins themselves are not installed by it. Open Vim for the first time and
-run the following command:
+The installer only sets up the plugin manager and the boilerplate, but the
+install block above takes care of the plugins too, without opening Vim
+interactively:
 
-#+begin_example
-:PlugInstall
-#+end_example
+1. The boilerplate ships with the plugins disabled, commented out as =" Plug=
+   directives. It is edited in Emacs Lisp, un-commenting them in place of a
+   shell =sed -i -e 's/^" Plug/Plug/' ~/.vimrc=.
+2. The plugin installer is run headlessly with =vim -es -u ~/.vimrc -c
+   PlugInstall -c qall=, which runs =:PlugInstall= and quits from Ex mode. The
+   =-u ~/.vimrc= is required: silent Ex mode does not source the user vimrc
+   by itself, and without it =PlugInstall= is not even defined (E492).
 
-Then restart Vim to apply all the settings.
+Each step is reported with =message=, so the progress (and the number of
+plugin lines un-commented) can be followed in the =*Messages*= buffer. After
+the block finishes, restart Vim to apply all the settings.
+
+* Uninstallation
+
+To remove the settings, the shell equivalent of =rm -rf ~/.vim*= is
+reproduced with =delete-file= / =delete-directory= over the =$HOME= entries
+whose names start with =.vim= (that is =~/.vim= with all the installed
+plugins, =~/.vimrc=, and =~/.viminfo= if present). No shell globbing is
+used: the =rm= command line is expanded here in Emacs Lisp, so nothing
+runs outside Emacs.
+
+#+begin_src emacs-lisp :results none
+  (let ((vim-entries (directory-files "~" 'full "\\`\\.vim")))
+    (if (null vim-entries)
+        (message "Nothing to remove, no ~/.vim* entries found")
+      (dolist (entry vim-entries)
+        (if (file-directory-p entry)
+            (delete-directory entry 'recursive)
+          (delete-file entry))
+        (message "Removed %s" entry))))
+#+end_src
