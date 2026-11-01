@@ -1,0 +1,43 @@
+#+title: Rofi
+
+Notes on [[https://github.com/davatorium/rofi][rofi]] (launcher/window switcher). The launcher configuration itself
+lives in the [[https://github.com/diacus/hyprland][hyprland]] repository (={rofi/nord.rasi,config.rasi}=, deployed to
+=~/.config/rofi/=); this note only covers machine-level fixes around it.
+
+* Window mode icons for apps whose app-id is not an icon name
+
+In =window= mode (Super+Tab) rofi has no desktop-file fallback like =drun=
+has: it resolves the row icon by looking up the raw =app_id= (Wayland) or
+=WM_CLASS= (X11) as an icon name in the icon theme
+([[https://github.com/davatorium/rofi/issues/1931][rofi#1931]],
+[[https://github.com/davatorium/rofi/issues/1935][rofi#1935]]). So an app
+whose id does not match any icon name renders without an icon, even though
+=drun= shows its icon fine:
+
+- =kitty= → matches =kitty.svg= → icon shown
+- =firefox_firefox= (Firefox sets this two-part id) → no icon named that
+- =emacs-pgtk= → the theme icon is plain =emacs=
+
+The upstream workaround: provide an icon literally named after the app-id.
+The icon theme here (Nordzy) declares =Inherits=hicolor=, so the lookup
+falls back to a user-level hicolor directory, which is exactly where these
+aliases belong — theme-safe and per-machine.
+
+The block below symlinks each alias to the icon in the theme, so window
+mode and =drun= mode render the same picture; extend the list whenever a
+new app shows up iconless (find its live app-id with
+=hyprctl -j clients=, the icon name with =find ~/.local/share/icons/*/apps
+/usr/share/icons/hicolor -name '*.svg' | grep <app>=):
+
+#+begin_src shell
+  mkdir -p ~/.local/share/icons/hicolor/scalable/apps
+  for alias in "firefox_firefox:firefox" "emacs-pgtk:emacs"; do
+      id="${alias%%:*}" icon="${alias##*:}"
+      ln -sfn ~/.local/share/icons/Nordzy/apps/scalable/"$icon".svg \
+              ~/.local/share/icons/hicolor/scalable/apps/"$id".svg
+  done
+#+end_src
+
+Symlinks (not copies) stay in sync with the theme's own artwork; the only
+fragility is dangling links if the theme is later uninstalled, which breaks
+nothing worse than the icon disappearing from window mode.
