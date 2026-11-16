@@ -21,6 +21,7 @@ can be executed by simply typing =C-c= + =C-c= with the cursor over it.
 - [[file:vim.org][Vim]]
 - [[file:emacs.org][Emacs]]
 - [[file:rofi.org][Rofi]]
+- [[file:publishing.org][Publishing these notes]]
 
 * Github Gist Usage
 Some punctual configuration files (e.g. =emacs.service=, =.tmux.conf=, the

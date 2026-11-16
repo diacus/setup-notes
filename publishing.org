@@ -1,0 +1,256 @@
+#+title: Publishing these Notes to the Web
+
+The repository is already a small web site waiting to happen: plain org
+files, one per topic, cross-linked from the =Sections= list of the
+=README.org=. The built-in [[https://orgmode.org/manual/Publishing.html][org-publish]] system turns them into static HTML
+without a single external dependency: only Emacs and org. Other tools from
+the [[https://orgmode.org/worg/org-blog-wiki.html][WORG catalog]] (weblorg, ox-hugo, org-static-blog) were considered and
+discarded for this experiment — they are aimed at blogs with post archives,
+tags and RSS, while these notes are documentation and want exactly what
+org-publish does out of the box: per-file HTML pages, an index page and
+plain assets copied verbatim.
+
+The whole configuration lives in this note as org-babel source blocks, in
+line with how the rest of these notes are executed: the blocks are tangled
+with =C-c C-v C-t= (or tangling is done as part of the container build) and
+the artifacts that appear in the repository root — =publish.el=, =site.css=,
+=Dockerfile=, =compose.yaml=, =.dockerignore= — are all generated from this
+file and therefore covered by =.gitignore=.
+
+** Setup and prerequisites
+
+The only requirement is Emacs with org (bundled since 26) and Docker to run
+the container deployment described below.
+
+One optional nicety: syntax highlighting of the source blocks in the
+generated HTML is produced by the =htmlize= package. Without it the blocks
+are exported as plain =<pre>= elements (the page still builds and looks
+fine). Install it if the colored code is wanted:
+
+#+begin_src emacs-lisp :results none
+  (require 'package)
+  (package-initialize)
+  (package-install 'htmlize)
+#+end_src
+
+* Publishing configuration
+
+The publishing project is split in two components sharing the same
+=publishing-directory=: the org files are exported to HTML and the =.css=
+files (the =site.css= stylesheet below, plus the =gtk-4/= stylesheets, both
+copied verbatim by =org-publish-attachment=) are attached as-is. A sitemap
+is generated automatically, and it becomes =index.html=, the landing page
+of the site.
+
+The =:html-head= entry links every page to =site.css=. The tangled
+=publish.el= works both loaded in batch (through =load-file-name=) and
+evaluated interactively with =C-c C-c= in this buffer (through
+=buffer-file-name=), which is how the local publishing directory is
+resolved without hard-coding paths:
+
+#+begin_src emacs-lisp :tangle publish.el :results none
+  (require 'ox-publish)
+
+  (defvar setup-notes-directory
+    (file-name-directory
+     (or load-file-name buffer-file-name (expand-file-name "."))))
+
+  ;; The code blocks of the notes are meant to run inside Emacs by
+  ;; org-babel, not at export time; evaluation is disabled since batch
+  ;; export cannot confirm it anyway.
+  (setq org-export-babel-evaluate nil)
+
+  (setq org-publish-project-alist
+        `(("setup-notes:org"
+           :base-directory ,setup-notes-directory
+           :base-extension "org"
+           :publishing-directory ,(expand-file-name "public"
+                                                    setup-notes-directory)
+           :publishing-function org-html-publish-to-html
+           :recursive t
+           ;; The publishing directory is excluded, so repeated publishes
+           ;; do not nest the output inside itself.
+           :exclude "public/"
+           :html-head "<link rel=\"stylesheet\" href=\"site.css\"
+                             type=\"text/css\"/>"
+           :auto-sitemap t
+           :sitemap-filename "index.org"
+           :sitemap-title "Desktop Environment Setup Notes")
+          ("setup-notes:css"
+           :base-directory ,setup-notes-directory
+           :base-extension "css"
+           :publishing-directory ,(expand-file-name "public"
+                                                    setup-notes-directory)
+           :publishing-function org-publish-attachment
+           :recursive t
+           :exclude "public/")
+          ("setup-notes"
+           :components ("setup-notes:org" "setup-notes:css"))))
+#+end_src
+
+To publish locally, evaluate this block (it forces a full rebuild into
+=./public/=; drop the argument of =org-publish= afterwards to publish only
+the files that changed):
+
+#+begin_src emacs-lisp :results output
+  (load (expand-file-name "publish.el"))
+  (org-publish "setup-notes" t)
+#+end_src
+
+* Site stylesheet
+
+A minimal stylesheet for the org HTML output. It is tangled into
+=site.css= and attached to the published site by the configuration above.
+
+#+begin_src css :tangle site.css
+  :root {
+    --fg: #303030;
+    --bg: #fffff8;
+    --accent: #8b2019;
+    --code-bg: #f2f0e8;
+    --border: #d9d4c5;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fg: #c8c5b7;
+      --bg: #20211c;
+      --accent: #d2766e;
+      --code-bg: #2b2d26;
+      --border: #3d4036;
+    }
+  }
+
+  body {
+    color: var(--fg);
+    background: var(--bg);
+    font-family: sans-serif;
+    font-size: 1rem;
+    max-width: 48rem;
+    margin: 0 auto;
+    padding: 0 1rem 2rem;
+  }
+
+  a { color: var(--accent); }
+
+  h1, h2, h3, h4 {
+    color: var(--accent);
+    line-height: 1.2;
+  }
+
+  .title { font-size: 2rem; margin-bottom: 0.25rem; }
+  .subtitle { font-size: 1.1rem; font-weight: normal; }
+
+  pre.src, pre.example {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    overflow-x: auto;
+    font-size: 0.9rem;
+  }
+
+  code, kbd {
+    background: var(--code-bg);
+    border-radius: 3px;
+    padding: 0.1rem 0.3rem;
+    font-size: 0.9rem;
+  }
+
+  .outline-2, .outline-text-2 { margin: 1rem 0; }
+
+  table {
+    border-collapse: collapse;
+    margin: 1rem 0;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.3rem 0.6rem;
+  }
+#+end_src
+
+* Deployment with Docker
+
+The container build does the publishing itself, so nothing but Docker is
+needed on the host: a multi-stage build runs batch Emacs in a container to
+tangle this note and export the site, and then copies the =public/=
+directory into a minimal nginx image that serves it.
+
+The build stage installs the =htmlize= package from
+[[https://elpa.nongnu.org/nongnu/][NonGNU ELPA]] so the code blocks are exported with color, tangles =publishing.org=
+into =publish.el= and the container files, and runs the export. Note the
+batch quoting: the elisp is wrapped in single quotes with =(quote …)=
+instead of ='…'=.
+
+#+begin_src conf :tangle Dockerfile
+  FROM silex/emacs:30.2 AS build
+
+  WORKDIR /src
+  COPY . .
+
+  RUN emacs --no-init-file --batch \
+        --eval '(require (quote org))' \
+        --eval '(org-babel-tangle-file "publishing.org")' \
+        --eval '(require (quote package))' \
+        --eval '(package-initialize)' \
+        --eval '(add-to-list (quote package-archives) (quote ("nongnu" . "https://elpa.nongnu.org/nongnu/")))' \
+        --eval '(package-refresh-contents)' \
+        --eval '(package-install (quote htmlize))' \
+        --eval '(load-file "publish.el")' \
+        --eval '(org-publish "setup-notes" t)'
+
+  FROM nginx:1.27-alpine
+
+  COPY --from=build /src/public/ /usr/share/nginx/html/
+#+end_src
+
+The compose file maps the site on port 8080 of the host:
+
+#+begin_src conf :tangle compose.yaml
+  services:
+    site:
+      build: .
+      ports:
+        - "8080:80"
+#+end_src
+
+So only the needed files go to the Docker context, without the git history
+or an old =public/=:
+
+#+begin_src conf :tangle .dockerignore
+  .git/
+  .gitignore
+  public/
+#+end_src
+
+Build and run the deployment with this block; the site is then available at
+=http://localhost:8080=:
+
+#+begin_src shell
+  cd /home/diacus/git/diacus/setup-notes
+  docker compose up -d --build
+  curl -fs http://localhost:8080/ | head
+#+end_src
+
+* Uninstallation
+
+Tear the deployment down and remove the built image (the generated
+artifacts can be left in place or deleted manually; they are all covered by
+=.gitignore=):
+
+#+begin_src shell
+  cd /home/diacus/git/diacus/setup-notes
+  docker compose down --rmi all
+#+end_src
+
+* Remaining details
+
+- The automatic sitemap lands in the repository root as =index.org=, also
+  generated and gitignored.
+- The =README.org= is published verbatim in =README.html=; its content and
+  the sitemap index overlap and the redundancy could be removed by turning
+  the sitemap into the only index.
+- Deploying to =gaia.home.arpa= is the next step: either pushing the image
+  (or the =public/= directory) to the server, or generating the HTML here
+  and serving it directly, since the container is only a delivery
+  mechanism.
