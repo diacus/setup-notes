@@ -4,6 +4,97 @@ DisplayLink is a technology that makes simple connect and display to any
 computer supporting USB or Wi-Fi by providing universal plug and play docking
 stations.
 
-Unfortunately the official [[https://www.synaptics.com/products/displaylink-graphics][DisplayLink Graphics by Synaptics]] only offers support
-for Ubuntu, however the [[https://github.com/AdnanHodzic/displaylink-debian/][displaylink-debian]] project provides an installer to
-enchance the experience for other Debian based distributions.
+The official [[https://www.synaptics.com/products/displaylink-graphics][DisplayLink Graphics by Synaptics]] installer only offers support
+for Ubuntu; the [[https://github.com/AdnanHodzic/displaylink-debian/][displaylink-debian]] project provides an installer to enhance
+the experience for other Debian based distributions.
+
+The setup documented below is the official Ubuntu path, as deployed on
+/host anahuac/: a MacBook Pro (2017) running Ubuntu 26.04 with Hyprland
+0.53.3 on Wayland, and a Lenovo /ThinkPad Hybrid USB-C with USB-A Dock/
+(usb id =17e9:6015=).
+
+** 1. The evdi kernel module
+
+Ubuntu ships signed, prebuilt =evdi= modules for each kernel flavour, so no
+DKMS build is needed for the -generic and -oem kernels. Install the module
+matching the running kernel /before/ the displaylink driver:
+
+#+begin_src shell :dir /sudo::
+apt install "linux-main-modules-evdi-$(uname -r)"
+#+end_src
+
+Doing it first matters: the =displaylink-driver= package pulls its own
+=linux-modules-evdi-oem-26.04= dependency, which drags the whole OEM kernel
+bundle in ([[https://github.com/DisplayLink/evdi/issues/598][evdi #598]]). Since 7.0.0-1018-oem sorts above any -generic
+kernel, =GRUB_DEFAULT=0= boots the OEM flavour afterwards. In this setup the
+decision was to /stay with the OEM kernel/ (its bundle includes the matching
+evdi module, so everything works). To go back to the generic line instead,
+install the module for the newest generic kernel plus the tracking meta
+before rebooting:
+
+#+begin_example
+apt install linux-main-modules-evdi-<latest-generic> linux-modules-evdi-generic-hwe-26.04
+#+end_example
+
+and re-point =GRUB_DEFAULT= to the generic entry in =/etc/default/grub=.
+
+** 2. The Synaptics apt repository
+
+The repository is added by installing Synaptics' keyring package, which
+brings both the GPG key and =/etc/apt/sources.list.d/synaptics.list=. Using
+a Launchpad PPA instead (=add-apt-repository ppa:synaptics-displaylink/displaylink-driver=)
+works too, but fails whenever Launchpad's API is unreachable, so the
+keyring route is the reliable one.
+
+Download the keyring with emacs-lisp, as done for other downloads in these
+notes:
+
+#+begin_src emacs-lisp
+(url-copy-file "https://www.synaptics.com/sites/default/files/Ubuntu/pool/stable/main/all/synaptics-repository-keyring.deb"
+               "synaptics-repository-keyring.deb" t)
+#+end_src
+
+Install it and update the package lists:
+
+#+begin_src shell :dir /sudo::
+apt install ./synaptics-repository-keyring.deb && apt update
+#+end_src
+
+** 3. The driver
+
+#+begin_src shell :dir /sudo::
+apt install displaylink-driver
+#+end_src
+
+This brings driver 6.4 (up to Ubuntu 26.10 and kernel 7.3), =libevdi1=, and
+— as described above — the OEM kernel bundle as a dependency. After
+installing, replug the dock so the freshly loaded =evdi= module picks the
+devices up.
+
+** 4. Displays under Hyprland (Wayland)
+
+No compositor configuration is needed: Hyprland's Aquamarine backend picks
+the evdi connectors up automatically, they show up as =DVI-I-1=, =DVI-I-2=,
+... and can be arranged with the usual =monitor= keywords in
+~/.config/hypr/hyprland.conf or on the fly with =hyprctl keyword monitor=.
+This is unofficial territory — the driver's own display management is
+GNOME/Mutter oriented — so it may regress across kernel/evdi/driver
+updates, and expect higher CPU on this path than on the GNOME stack.
+
+Verify with:
+
+#+begin_example
+lsusb | grep 17e9     # the dock's DisplayLink chip is enumerated
+lsmod | grep evdi     # the module is loaded
+hyprctl monitors      # eDP-1 plus one DVI-I-N entry per external display
+#+end_example
+
+** Known quirks
+
+- On the first plug of this dock, only its USB2 half enumerated (the
+  /VIA Labs/ =17ef:= hubs showed up, but no =17e9= device and no USB3 hub).
+  Unplug and replug resolved it: a flaky SuperSpeed link (cable or port)
+  is the first suspect when the DisplayLink chip never appears in =lsusb=.
+- Keep the dock hardware in mind: a Thunderbolt / USB-C Alt-Mode dock
+  would avoid DisplayLink entirely; on a machine with Thunderbolt ports
+  (like this MacBook Pro) that is the preferred option.
